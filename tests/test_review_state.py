@@ -77,3 +77,20 @@ def test_failed_verification_can_be_rejected_but_not_approved(tmp_path) -> None:
     )
 
     assert record.decision == "rejected"
+
+
+def test_invalid_review_decision_does_not_append_ledger(tmp_path) -> None:
+    store = ReviewStore(tmp_path / "state.json")
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    with pytest.raises(ReviewStateError, match="approved or rejected"):
+        store.record_decision(
+            claim_id="claim-001",
+            decision="maybe",
+            verification=verification(True),
+            ledger_path=ledger_path,
+            reviewer="tester",
+        )
+
+    assert store.get("claim-001") is None
+    assert not ledger_path.exists()

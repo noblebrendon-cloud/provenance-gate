@@ -1,6 +1,12 @@
 __pycache__/
 .pytest_cache/
 .venv/
+.env
+.env.*
 data/
+exports/
 tests/
 *.pyc
+*.jsonl
+review-state.json
+*-decision-packet.json

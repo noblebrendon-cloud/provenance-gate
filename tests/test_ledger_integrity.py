@@ -41,3 +41,13 @@ def test_hash_chain_detects_tampering(tmp_path) -> None:
 
     assert result.valid is False
     assert any("hash does not match" in error for error in result.errors)
+
+
+def test_hash_chain_invalid_json_fails_safely(tmp_path) -> None:
+    ledger_path = tmp_path / "ledger.jsonl"
+    ledger_path.write_text("{not valid json}\n", encoding="utf-8")
+
+    result = verify_hash_chain(ledger_path)
+
+    assert result.valid is False
+    assert any("Invalid JSON" in error for error in result.errors)

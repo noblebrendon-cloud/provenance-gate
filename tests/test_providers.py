@@ -12,6 +12,16 @@ def test_demo_provider_is_default(monkeypatch) -> None:
     assert isinstance(provider, DemoProvider)
 
 
+def test_demo_mode_overrides_fireworks_provider_without_key(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setenv("PROVIDER", "fireworks")
+    monkeypatch.delenv("FIREWORKS_API_KEY", raising=False)
+
+    provider = get_provider()
+
+    assert isinstance(provider, DemoProvider)
+
+
 def test_fireworks_provider_requires_environment_key(monkeypatch) -> None:
     monkeypatch.delenv("FIREWORKS_API_KEY", raising=False)
     provider = FireworksProvider()
