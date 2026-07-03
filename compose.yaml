@@ -1,0 +1,11 @@
+services:
+  provenance-gate:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DEMO_MODE: "true"
+      PROVIDER: "demo"
+      SOURCE_FIXTURE: "synthetic_source.md"
+      DATA_DIR: "/app/data"
+      REVIEWER: "demo-reviewer"

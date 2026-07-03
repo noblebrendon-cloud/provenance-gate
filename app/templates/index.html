@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Provenance Gate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Provenance Gate</h1>
+        <p>{{ source_name }}</p>
+      </div>
+      <div class="topbar-actions">
+        <span class="pill">Provider: {{ provider_name }}</span>
+        <span class="pill {% if ledger_valid %}ok{% else %}bad{% endif %}">
+          Ledger: {% if ledger_valid %}valid{% else %}invalid{% endif %}
+        </span>
+        <button class="ghost" type="button" id="resetButton">Reset</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="source-pane" aria-label="Source document">
+        <div class="pane-heading">
+          <h2>Source</h2>
+        </div>
+        <pre>{{ source_text }}</pre>
+      </section>
+
+      <section class="claims-pane" aria-label="Claim cards">
+        <div class="pane-heading">
+          <h2>Claims</h2>
+        </div>
+
+        {% if ledger_errors %}
+          <div class="notice bad">
+            {% for error in ledger_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="claim-list">
+          {% for card in cards %}
+            {% set claim = card.claim %}
+            {% set verification = card.verification %}
+            {% set review = card.review %}
+            <article class="claim-card" data-claim-id="{{ claim.id }}">
+              <div class="claim-head">
+                <span class="claim-id">{{ claim.id }}</span>
+                <span class="badge {% if verification.verified %}ok{% else %}bad{% endif %}">
+                  {% if verification.verified %}verified{% else %}failed{% endif %}
+                </span>
+              </div>
+
+              <p class="claim-text">{{ claim.text }}</p>
+
+              <blockquote>{{ claim.citation.quote }}</blockquote>
+
+              <dl class="metadata">
+                <div>
+                  <dt>Lines</dt>
+                  <dd>
+                    {% if verification.start_line %}
+                      {{ verification.start_line }}-{{ verification.end_line }}
+                    {% else %}
+                      none
+                    {% endif %}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Review</dt>
+                  <dd class="review-status">
+                    {% if review %}{{ review.decision }}{% else %}pending{% endif %}
+                  </dd>
+                </div>
+              </dl>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  data-action="review"
+                  data-decision="approved"
+                  {% if review or not verification.verified %}disabled{% endif %}
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  data-action="review"
+                  data-decision="rejected"
+                  {% if review %}disabled{% endif %}
+                >
+                  Reject
+                </button>
+                <a
+                  class="export-link {% if not review %}hidden{% endif %}"
+                  href="{{ url_for('export_decision_packet', claim_id=claim.id) }}"
+                >
+                  Export JSON
+                </a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

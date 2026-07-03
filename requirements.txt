@@ -1,0 +1,4 @@
+Flask==3.0.3
+pytest==8.2.2
+asgiref==3.8.1
+uvicorn==0.30.1
