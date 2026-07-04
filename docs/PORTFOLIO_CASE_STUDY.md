@@ -13,14 +13,16 @@ Generated claims can look credible when they include citations, but a citation i
 5. Display the claim, quote, source line range, and verification result.
 6. Require a reviewer to approve or reject the claim.
 7. Append the review action to a hash-linked JSONL ledger.
-8. Export an inspectable JSON decision packet.
+8. Display audit integrity status for the local ledger.
+9. In demo mode, simulate ledger tampering and observe validation fail.
+10. Export an inspectable JSON decision packet.
 
 ## Architecture Summary
 
 - `app/providers.py` defines the provider boundary. `DemoProvider` is deterministic and enabled by default. `FireworksProvider` is an optional future boundary and does not make external calls in this version.
 - `app/citation.py` verifies quoted passages by exact source-text matching.
 - `app/review.py` validates reviewer decisions and prevents silent overwrites.
-- `app/ledger.py` appends review actions and validates the hash chain.
+- `app/ledger.py` appends review actions, summarizes audit integrity, simulates demo tampering, and validates the hash chain.
 - `app/decision_packet.py` builds exportable JSON packets.
 - `app/main.py` exposes the browser UI and API routes.
 - `fixtures/` contains synthetic source material only.
@@ -32,8 +34,10 @@ Generated claims can look credible when they include citations, but a citation i
 - Exact citation verification against a local Markdown fixture.
 - Human approve or reject workflow.
 - Hash-linked JSONL audit ledger.
+- Browser-visible audit integrity status.
+- Demo-only tamper simulation and reset.
 - JSON decision-packet export.
-- Tests for citation verification, review transitions, ledger integrity, provider defaults, and packet export.
+- Tests for citation verification, review transitions, ledger integrity, audit status, provider defaults, and packet export.
 
 ## Verification Evidence
 
@@ -45,7 +49,7 @@ python -m compileall app tests
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-The browser demo shows that a reviewer can inspect the source, verify an exact quote, approve or reject a claim, and export a packet containing the review decision and ledger reference.
+The browser demo shows that a reviewer can inspect the source, verify an exact quote, approve or reject a claim, inspect ledger integrity, simulate a controlled tamper, reset demo state, and export a packet containing the review decision and ledger reference.
 
 ## What This Project Does Not Claim To Solve
 
@@ -53,6 +57,7 @@ The browser demo shows that a reviewer can inspect the source, verify an exact q
 - It does not certify model behavior.
 - It does not provide production authentication or authorization.
 - It does not protect against every possible local tampering scenario.
+- It detects changes to the local ledger sequence; it does not prevent all compromise.
 - It does not call Fireworks, Gemma, or any external model by default.
 - It does not rely on private data, user data, or external-service configuration.
 

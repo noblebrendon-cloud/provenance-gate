@@ -9,4 +9,7 @@
 - The verified run path is the direct local server command: `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`.
 - This is a single-user prototype, not a production security system.
 - Exact quote verification confirms that cited text appears in the source; it does not prove semantic truth.
+- Hash-chain validation detects changes to the local ledger sequence.
+- Hash-chain validation does not prove semantic truth, prevent all compromise, or create production-grade security.
+- The demo tamper simulation modifies safe runtime ledger data only; it never modifies source fixtures.
 - The local JSONL ledger is inspectable and hash-linked, but it is not a substitute for a hardened append-only storage service.

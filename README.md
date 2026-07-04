@@ -12,7 +12,8 @@ The project demonstrates a local review gate for generated or candidate claims. 
 4. Shows the source, claim, citation, verification result, and review state in a browser UI.
 5. Lets a reviewer approve or reject each claim.
 6. Appends each review action to a local JSONL audit ledger.
-7. Exports a JSON decision packet for reviewed claims.
+7. Shows ledger integrity status, latest hashes, and demo tamper detection.
+8. Exports a JSON decision packet for reviewed claims.
 
 `DEMO_MODE=true` is the default. The default workflow requires no API key and makes no external API calls.
 
@@ -22,7 +23,7 @@ The project demonstrates a local review gate for generated or candidate claims. 
 python -m pytest
 ```
 
-The test suite covers citation verification, review state transitions, hash-chain integrity, provider defaults, and decision-packet export.
+The test suite covers citation verification, review state transitions, hash-chain integrity, inspectable audit status, provider defaults, and decision-packet export.
 
 ## Run Locally
 
@@ -52,6 +53,9 @@ The browser demo proves the local control loop:
 - Each claim shows its exact quoted citation.
 - Citation verification reports whether the quote exists in the loaded source.
 - A reviewer must approve or reject a claim before export.
+- The Audit Integrity panel shows the ledger entry count, chain status, latest record hash, and previous-hash link.
+- In demo mode, a reviewer can simulate ledger tampering and see validation fail.
+- Reset Demo clears runtime demo state and returns the ledger to a valid pristine state.
 - The exported packet contains the claim, evidence, verification result, review decision, and ledger reference.
 
 ## Configuration
@@ -84,6 +88,7 @@ Copy `.env.example` if you want to customize local settings.
 - The Fireworks provider boundary is not enabled by default and does not call an external API in this version.
 - The app is a single-user prototype, not a production security system.
 - Exact quote verification proves only that the quoted passage appears in the source; it does not prove that the claim is semantically true.
+- Hash-chain validation detects changes to the local ledger sequence; it does not prevent every compromise or create production-grade security.
 
 See `docs/PROJECT_BRIEF.md`, `docs/PORTFOLIO_CASE_STUDY.md`, and `docs/KNOWN_LIMITATIONS.md` for more context.
 

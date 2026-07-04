@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +14,25 @@ ZERO_HASH = "0" * 64
 class ChainVerification:
     valid: bool
     errors: list[str]
+
+
+@dataclass(frozen=True)
+class AuditStatus:
+    entry_count: int
+    valid: bool
+    status: str
+    latest_record_hash: str | None
+    latest_previous_hash: str | None
+    expected_previous_hash: str | None
+    latest_previous_hash_valid: bool | None
+    errors: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+class LedgerTamperError(ValueError):
+    pass
 
 
 def _canonical_json(value: dict[str, Any]) -> str:
@@ -83,6 +102,13 @@ def append_review_action(
     return entry
 
 
+def write_entries(ledger_path: Path, entries: list[dict[str, Any]]) -> None:
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    with ledger_path.open("w", encoding="utf-8") as ledger_file:
+        for entry in entries:
+            ledger_file.write(json.dumps(entry, ensure_ascii=True, sort_keys=True) + "\n")
+
+
 def expected_entry_hash(entry: dict[str, Any]) -> str:
     payload = {key: value for key, value in entry.items() if key != "entry_hash"}
     return _hash_entry_payload(payload)
@@ -115,3 +141,67 @@ def find_entry_by_hash(ledger_path: Path, entry_hash: str) -> dict[str, Any] | N
         if entry.get("entry_hash") == entry_hash:
             return entry
     return None
+
+
+def _nonempty_line_count(ledger_path: Path) -> int:
+    if not ledger_path.exists():
+        return 0
+    return sum(1 for line in ledger_path.read_text(encoding="utf-8").splitlines() if line.strip())
+
+
+def audit_status(ledger_path: Path) -> AuditStatus:
+    try:
+        entries = load_entries(ledger_path)
+    except ValueError as exc:
+        return AuditStatus(
+            entry_count=_nonempty_line_count(ledger_path),
+            valid=False,
+            status="Invalid",
+            latest_record_hash=None,
+            latest_previous_hash=None,
+            expected_previous_hash=None,
+            latest_previous_hash_valid=None,
+            errors=[str(exc)],
+        )
+
+    chain = verify_hash_chain(ledger_path)
+    latest = entries[-1] if entries else None
+    expected_previous_hash = None
+    latest_previous_hash = None
+    latest_previous_hash_valid = None
+    latest_record_hash = None
+
+    if latest:
+        latest_record_hash = latest.get("entry_hash")
+        latest_previous_hash = latest.get("previous_hash")
+        expected_previous_hash = entries[-2].get("entry_hash") if len(entries) > 1 else ZERO_HASH
+        latest_previous_hash_valid = latest_previous_hash == expected_previous_hash
+
+    return AuditStatus(
+        entry_count=len(entries),
+        valid=chain.valid,
+        status="Valid" if chain.valid else "Invalid",
+        latest_record_hash=latest_record_hash,
+        latest_previous_hash=latest_previous_hash,
+        expected_previous_hash=expected_previous_hash,
+        latest_previous_hash_valid=latest_previous_hash_valid,
+        errors=chain.errors,
+    )
+
+
+def simulate_demo_tamper(ledger_path: Path) -> dict[str, Any]:
+    entries = load_entries(ledger_path)
+    if not entries:
+        raise LedgerTamperError("Review a claim before simulating ledger tampering.")
+
+    latest = dict(entries[-1])
+    original_decision = str(latest.get("decision", "unknown"))
+    latest["decision"] = (
+        original_decision
+        if original_decision.startswith("tampered-")
+        else f"tampered-{original_decision}"
+    )
+    latest["tamper_marker"] = "demo-only simulated ledger edit"
+    entries[-1] = latest
+    write_entries(ledger_path, entries)
+    return latest

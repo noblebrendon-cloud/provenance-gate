@@ -10,9 +10,14 @@ from flask import Flask, Response, jsonify, redirect, render_template, request, 
 
 from app.citation import VerificationResult, verify_citation
 from app.decision_packet import build_decision_packet
-from app.ledger import find_entry_by_hash, verify_hash_chain
+from app.ledger import (
+    LedgerTamperError,
+    audit_status,
+    find_entry_by_hash,
+    simulate_demo_tamper,
+)
 from app.models import ClaimCard
-from app.providers import get_provider
+from app.providers import demo_mode_enabled, get_provider
 from app.review import ReviewRecord, ReviewStateError, ReviewStore
 
 
@@ -52,6 +57,14 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     def review_store() -> ReviewStore:
         return ReviewStore(state_path())
 
+    def current_audit_status() -> dict[str, Any]:
+        return audit_status(ledger_path()).to_dict()
+
+    def demo_mode_response() -> tuple[Response, int] | None:
+        if demo_mode_enabled():
+            return None
+        return jsonify({"error": "This action is available only when DEMO_MODE=true."}), 403
+
     def load_source() -> str:
         return source_path().read_text(encoding="utf-8")
 
@@ -85,16 +98,17 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         source, pairs = claim_bundle()
         state = review_store().all()
         cards = [card_payload(claim, verification, state.get(claim.id)) for claim, verification in pairs]
-        chain = verify_hash_chain(ledger_path())
+        audit = current_audit_status()
         return render_template(
             "index.html",
             cards=cards,
             source_text=source,
             source_name=_relative_display_path(source_path(), Path(app.config["PROJECT_ROOT"])),
             provider_name=get_provider().name,
-            demo_mode=os.environ.get("DEMO_MODE", "true"),
-            ledger_valid=chain.valid,
-            ledger_errors=chain.errors,
+            demo_mode=demo_mode_enabled(),
+            audit=audit,
+            ledger_valid=audit["valid"],
+            ledger_errors=audit["errors"],
         )
 
     @app.get("/api/claims")
@@ -102,6 +116,15 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         _source, pairs = claim_bundle()
         state = review_store().all()
         return jsonify([card_payload(claim, verification, state.get(claim.id)) for claim, verification in pairs])
+
+    @app.get("/api/audit")
+    def api_audit() -> Response:
+        return jsonify(
+            {
+                "audit": current_audit_status(),
+                "demo_mode": demo_mode_enabled(),
+            }
+        )
 
     @app.post("/api/review/<claim_id>")
     def review_claim(claim_id: str) -> tuple[Response, int] | Response:
@@ -129,6 +152,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                 "status": "ok",
                 "review": review.to_dict(),
                 "ledger_entry": ledger_entry,
+                "audit": current_audit_status(),
                 "packet_url": url_for("export_decision_packet", claim_id=claim.id),
             }
         )
@@ -166,12 +190,26 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
 
     @app.post("/api/reset")
     def reset_demo() -> Response:
+        blocked = demo_mode_response()
+        if blocked:
+            return blocked
         review_store().reset()
         if ledger_path().exists():
             ledger_path().unlink()
         if request.accept_mimetypes.best == "application/json":
-            return jsonify({"status": "reset"})
+            return jsonify({"status": "reset", "audit": current_audit_status()})
         return redirect(url_for("index"))
+
+    @app.post("/api/audit/tamper")
+    def tamper_demo_ledger() -> tuple[Response, int] | Response:
+        blocked = demo_mode_response()
+        if blocked:
+            return blocked
+        try:
+            simulate_demo_tamper(ledger_path())
+        except LedgerTamperError as exc:
+            return jsonify({"error": str(exc), "audit": current_audit_status()}), 409
+        return jsonify({"status": "tampered", "audit": current_audit_status()})
 
     return app
 

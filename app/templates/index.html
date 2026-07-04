@@ -14,10 +14,19 @@
       </div>
       <div class="topbar-actions">
         <span class="pill">Provider: {{ provider_name }}</span>
-        <span class="pill {% if ledger_valid %}ok{% else %}bad{% endif %}">
+        <span id="ledgerStatusPill" class="pill {% if ledger_valid %}ok{% else %}bad{% endif %}">
           Ledger: {% if ledger_valid %}valid{% else %}invalid{% endif %}
         </span>
-        <button class="ghost" type="button" id="resetButton">Reset</button>
+        <button
+          class="ghost"
+          type="button"
+          id="resetButton"
+          data-action="reset"
+          data-demo-mode="{% if demo_mode %}true{% else %}false{% endif %}"
+          {% if not demo_mode %}disabled{% endif %}
+        >
+          Reset
+        </button>
       </div>
     </header>
 
@@ -33,6 +42,83 @@
         <div class="pane-heading">
           <h2>Claims</h2>
         </div>
+
+        <section class="audit-panel" aria-label="Audit integrity">
+          <div class="audit-head">
+            <div>
+              <h3>Audit Integrity</h3>
+              <p>Hash-chain validation checks whether the local decision ledger still matches its recorded sequence.</p>
+            </div>
+            <span
+              class="badge {% if audit.valid %}ok{% else %}bad{% endif %}"
+              data-audit-field="status-badge"
+            >
+              {{ audit.status }}
+            </span>
+          </div>
+
+          <dl class="audit-grid">
+            <div>
+              <dt>Ledger Entries</dt>
+              <dd data-audit-field="entry-count">{{ audit.entry_count }}</dd>
+            </div>
+            <div>
+              <dt>Chain Status</dt>
+              <dd data-audit-field="status">{{ audit.status }}</dd>
+            </div>
+            <div>
+              <dt>Latest Record Hash</dt>
+              <dd class="hash-value" data-audit-field="latest-record-hash">
+                {% if audit.latest_record_hash %}{{ audit.latest_record_hash }}{% else %}No records yet{% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt>Previous Hash Link</dt>
+              <dd class="hash-value" data-audit-field="previous-hash-link">
+                {% if audit.latest_previous_hash %}
+                  stored {{ audit.latest_previous_hash }} -> expected {{ audit.expected_previous_hash }}
+                {% else %}
+                  No records yet
+                {% endif %}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="audit-explanation">
+            <p>
+              Validation recomputes each ledger entry hash, checks sequence indexes, and confirms each
+              `previous_hash` points to the prior entry. It detects local ledger edits; it does not prove
+              semantic truth, prevent every compromise, or provide production-grade security.
+            </p>
+            <div class="audit-errors {% if audit.errors|length == 0 %}hidden{% endif %}" data-audit-field="errors">
+              {% for error in audit.errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="actions">
+            <button
+              type="button"
+              id="tamperButton"
+              data-action="tamper"
+              data-demo-mode="{% if demo_mode %}true{% else %}false{% endif %}"
+              {% if not demo_mode or audit.entry_count == 0 %}disabled{% endif %}
+            >
+              Simulate Tamper
+            </button>
+            <button
+              class="ghost"
+              type="button"
+              id="auditResetButton"
+              data-action="reset"
+              data-demo-mode="{% if demo_mode %}true{% else %}false{% endif %}"
+              {% if not demo_mode %}disabled{% endif %}
+            >
+              Reset Demo
+            </button>
+          </div>
+        </section>
 
         {% if ledger_errors %}
           <div class="notice bad">
