@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: Provenance Gate
+authors:
+  - family-names: Coleman
+    given-names: Brendon R.
+date-released: 2026-07-05
+version: 0.1.3
+doi: 10.5281/zenodo.21208506
+url: https://github.com/noblebrendon-cloud/provenance-gate
+license: MIT
+abstract: Source-grounded AI review workflow for reviewable claims, deterministic citation verification, human decisions, and hash-linked audit records.
+preferred-citation:
+  type: software
+  title: Provenance Gate
+  authors:
+    - family-names: Coleman
+      given-names: Brendon R.
+  date-released: 2026-07-05
+  version: 0.1.3
+  doi: 10.5281/zenodo.21208507
+  url: https://github.com/noblebrendon-cloud/provenance-gate
+  abstract: Source-grounded AI review workflow for reviewable claims, deterministic citation verification, human decisions, and hash-linked audit records.

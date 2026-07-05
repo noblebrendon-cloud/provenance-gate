@@ -1,8 +1,26 @@
 # Provenance Gate
 
+[![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21208506.svg)](https://doi.org/10.5281/zenodo.21208506)
+
 Provenance Gate — a source-grounded AI review workflow for reviewable claims, deterministic citation verification, human decisions, and hash-linked audit records.
 
 The project demonstrates a local review gate for generated or candidate claims. Each claim must point to an exact quoted passage from a source document. The application verifies that quote deterministically, requires a human approve or reject decision, records the decision in a hash-linked audit ledger, and exports an inspectable JSON decision packet.
+
+## How to Cite
+
+Use the concept DOI for a general citation of the evolving project:
+
+https://doi.org/10.5281/zenodo.21208506
+
+Use the version DOI when citing v0.1.3 specifically:
+
+https://doi.org/10.5281/zenodo.21208507
+
+Preferred citation for v0.1.3:
+
+Coleman, Brendon R. (2026). noblebrendon-cloud/provenance-gate: v0.1.3 â€” Automated Continuous Verification (v0.1.3). Zenodo. https://doi.org/10.5281/zenodo.21208507
+
+The machine-readable citation metadata lives in `CITATION.cff`.
 
 ## What It Does
 
