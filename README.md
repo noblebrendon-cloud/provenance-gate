@@ -18,7 +18,7 @@ https://doi.org/10.5281/zenodo.21208507
 
 Preferred citation for v0.1.3:
 
-Coleman, Brendon R. (2026). noblebrendon-cloud/provenance-gate: v0.1.3 â€” Automated Continuous Verification (v0.1.3). Zenodo. https://doi.org/10.5281/zenodo.21208507
+Coleman, Brendon R. (2026). noblebrendon-cloud/provenance-gate: v0.1.3 — Automated Continuous Verification (v0.1.3). Zenodo. https://doi.org/10.5281/zenodo.21208507
 
 The machine-readable citation metadata lives in `CITATION.cff`.
 
