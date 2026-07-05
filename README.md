@@ -25,6 +25,19 @@ python -m pytest
 
 The test suite covers citation verification, review state transitions, hash-chain integrity, inspectable audit status, provider defaults, and decision-packet export.
 
+## Continuous Verification
+
+GitHub Actions runs on pushes to `main` and pull requests targeting `main`.
+
+The CI workflow installs dependencies from `requirements.txt`, then runs:
+
+```bash
+python -m pytest
+python -m compileall app tests
+```
+
+CI verifies the Python test suite and compile health. It does not deploy the app, call external APIs, run Fireworks, build Docker, replace human review, or prove semantic truth.
+
 ## Run Locally
 
 ```bash
@@ -79,7 +92,7 @@ Copy `.env.example` if you want to customize local settings.
 
 ## Container Configuration
 
-`Dockerfile` and `compose.yaml` are included for container packaging, but Docker has not been locally verified in this environment because the Docker CLI is unavailable here. The direct local server workflow above is the verified run path.
+`Dockerfile` and `compose.yaml` are included for container packaging. Docker fresh-clone verification for the public `v0.1.1` tag is documented in `docs/DOCKER_VERIFICATION.md`. The current runtime image does not package the test suite, so tests run in the development and CI environments.
 
 ## Current Limitations
 
